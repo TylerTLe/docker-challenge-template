@@ -1,0 +1,50 @@
+version: "3.8"
+
+services:
+  db:
+    image: mariadb
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: my_secure_password
+      MYSQL_DATABASE: my_app_db
+      MYSQL_USER: my_app_user
+      MYSQL_PASSWORD: my_app_password
+    volumes:
+      - db-data:/var/lib/mysql
+    networks:
+      - backend
+
+  node-service:
+    build: ./api
+    restart: always
+    environment:
+      DB_HOST: db
+      DB_USERNAME: my_app_user
+      DB_PASSWORD: my_app_password
+      DB_DATABASE: my_app_db
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    networks:
+      - backend
+      - frontend
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - node-service
+    networks:
+      - frontend
+
+volumes:
+  db-data: 
+
+
+networks:
+  frontend:
+  backend:
